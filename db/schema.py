@@ -1,6 +1,5 @@
 import datetime
 from typing import List
-from enum import Enum
 from pydantic import BaseModel
 
 
@@ -25,6 +24,7 @@ class FilmGet(BaseModel):
 
 # Одно и то же с FilmGet
 # или убрать совсем или сделать разницу между ответами запросов(убрать добавить поля)
+# Повторить для всех эндпоинтов получения фильма(ов)
 class FilmByCategoryGet(BaseModel):
     film_id: int
     title: str
