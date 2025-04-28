@@ -20,12 +20,27 @@ def get_db():
 
 @app.get("/film", response_model=List[FilmGet])
 def get_all_films(limit: int = 10, db=Depends(get_db)):
+    """
+    Возвращает заданное параметром limit количество фильмов.
+
+    :param limit: Количество строк, которые необходимо вернуть, по умолчанию 10
+    :param db: Подключение к базе данных
+    :return: Лист сущностей FIlmGet, в текущей реализации это все поля таблицы.
+    """
     response = db.query(Film).limit(limit).all()
     return response
 
 
 @app.get("/film-by-category/{category}", response_model=List[FilmByCategoryGet])
 def get_film_by_category(category: str, limit: int = 10, db=Depends(get_db)):
+    """
+    Возвращает заданное параметром limit количество фильмов с указанной категорией.
+
+    :param category: Категория фильмов,которые необходимо вернуть. enum-поле, описание возможных значений в схеме
+    :param limit: Количество строк,которые необходимо вернуть, по умолчанию 10.
+    :param db:  Подключение к базе данных
+    :return: Лист сущностей FIlmGet, в текущей реализации это все поля таблицы.
+    """
     response = db.query(Film).join(FilmCategory).join(Category).filter(
         Category.name == category).limit(limit).all()
     return response
