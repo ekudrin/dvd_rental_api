@@ -55,11 +55,25 @@ def get_film_by_name(title: Annotated[str, Query()], limit: int = 10, db=Depends
     :param title: Название фильма
     :param limit: Количество строк,которые необходимо вернуть, по умолчанию 10.
     :param db:  Подключение к базе данных
-    :return: сущность FIlmGet, в текущей реализации это все поля таблицы.
+    :return: лист FIlmGet, в текущей реализации это все поля таблицы.
     """
 
     response = db.query(Film).filter(Film.title == title).limit(limit).all()
     return response
+
+
+@app.get("/film/in-store")
+def get_film_in_store(store_id: Annotated[int,Query()], limit: int= 10, db=Depends(get_db)):
+    """
+    Вернет все фильмы в наличии в магазине по айди магазина
+
+    :param store_id: айди магазина
+    :param limit: Количество строк,которые необходимо вернуть, по умолчанию 10.
+    :param db:  Подключение к базе данных
+    :return: лист FIlmGet, в текущей реализации это все поля таблицы.
+    """
+
+    response = db.query(Film).join()
 
 
 if __name__ == "__main__":

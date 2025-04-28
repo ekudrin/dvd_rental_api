@@ -1,6 +1,6 @@
 
 
-from sqlalchemy import Column, Integer, String, TIMESTAMP, Enum
+from sqlalchemy import Column, Integer, TIMESTAMP, Enum
 
 from db.database import Base
 from enums import FilmCategoryEnum
