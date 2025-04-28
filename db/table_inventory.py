@@ -11,4 +11,3 @@ class Inventory(Base):
     store_id = Column(Integer, ForeignKey("store.store_id"), primary_key=True)
     last_update = Column(TIMESTAMP)
     film = relationship("Film")
-    store = relationship("Store")
