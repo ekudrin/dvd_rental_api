@@ -16,3 +16,17 @@ class FilmGet(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class FilmInStoreGet(BaseModel):
+    inventory_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class CustomerGet(BaseModel):
+    customer_id: int
+
+    class Config:
+        orm_mode = True

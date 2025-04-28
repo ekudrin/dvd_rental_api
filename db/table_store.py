@@ -12,5 +12,5 @@ class Store(Base):
     last_update = Column(TIMESTAMP)
     staff = relationship("Staff")
     address = relationship("Address")
-    inventory = relationship("Inventory") # если добавить связь в инвентори падает при определении связей
-
+    inventory = relationship("Inventory")  # если добавить связь в инвентори падает при определении связей
+    customer = relationship("Customer")
