@@ -1,15 +1,15 @@
 from datetime import datetime, timedelta
+from typing import Annotated
 from typing import List
 
 import uvicorn
-from sqlalchemy import insert
+from fastapi import FastAPI, Depends, Query, HTTPException
 
 from db.database import SessionLocal
-from fastapi import FastAPI, Depends, Query, HTTPException
-from typing import Annotated
 from db.table_film import Film
 from enums import FilmCategoryEnum
-from schema import FilmGet, FilmInStoreGet, CustomerGet, FakeAuthReq, FakeAuthResp, RentReq, RentResp, PaymentReq
+from schema import FilmGet, FilmInStoreGet, CustomerGet, FakeAuthReq, FakeAuthResp, RentReq, RentResp, PaymentReq, \
+    FilmCheckInStoreGet
 from table_category import Category
 from table_customer import Customer
 from table_film_category import FilmCategory
@@ -26,76 +26,44 @@ def get_db():
         return db
 
 
-@app.get("/film/", response_model=List[FilmGet])
-def get_all_films(limit: int = 10, db=Depends(get_db)):
-    """
-    Возвращает заданное параметром limit количество фильмов.
+@app.get("/film", response_model=List[FilmGet])
+def get_all_films(title: str | None = None, category: FilmCategoryEnum | None = None, limit: int = 10,
+                  db=Depends(get_db)):
+    query = db.query(Film.film_id, Film.title, Category.name, Film.release_year, Film.length, Film.rating,
+                     Film.description,
+                     Film.special_features,
+                     Film.rental_rate, Film.rental_duration).select_from(Film).join(FilmCategory).join(Category)
+    if title is not None:
+        query = query.filter(Film.title == title)
+    if category is not None:
+        query = query.filter(Category.name == category.value)
 
-    :param limit: Количество строк, которые необходимо вернуть, по умолчанию 10
-    :param db: Подключение к базе данных
-    :return: Лист  FIlmGet
-    """
-    response = db.query(Film.film_id, Film.title, Film.release_year, Film.length, Film.rating, Film.description,
-                        Film.special_features,
-                        Film.rental_rate, Film.rental_duration).limit(
-        limit).all()
+    response = query.limit(limit).all()
+
     return response
 
 
-@app.get("/film/by-category", response_model=List[FilmGet])
-def get_film_by_category(category: FilmCategoryEnum = Query(), limit: int = 10, db=Depends(get_db)):
-    """
-    Возвращает заданное параметром limit количество фильмов с указанной категорией.
-
-    :param category: Категория фильмов,которые необходимо вернуть. enum-поле, описание возможных значений в схеме
-    :param limit: Количество строк,которые необходимо вернуть, по умолчанию 10.
-    :param db:  Подключение к базе данных
-    :return: Лист  FIlmGet
-    """
-    response = db.query(Film.film_id, Film.title, Film.release_year, Film.length, Film.rating, Film.description,
-                        Film.special_features,
-                        Film.rental_rate, Film.rental_duration).join(FilmCategory).join(Category).filter(
-        Category.name == category.value).limit(limit).all()
-    return response
-
-
-@app.get("/film/by-title", response_model=List[FilmGet])
-def get_film_by_name(title: Annotated[str, Query()], limit: int = 10, db=Depends(get_db)):
-    """
-    Вернет фильм с указанным в query названием
-
-    :param title: Название фильма
-    :param limit: Количество строк,которые необходимо вернуть, по умолчанию 10.
-    :param db:  Подключение к базе данных
-    :return: лист FIlmGet
-    """
-
-    response = db.query(Film.film_id, Film.title, Film.release_year, Film.length, Film.rating, Film.description,
-                        Film.special_features,
-                        Film.rental_rate, Film.rental_duration).filter(Film.title == title).limit(limit).all()
-    return response
-
-
-@app.get("/film/in-store", response_model=List[FilmGet])
-def get_film_in_store(store_id: Annotated[int, Query()], limit: int = 10, db=Depends(get_db)):
+@app.get("/film/in-store", response_model=List[FilmInStoreGet])
+def get_film_in_store(store_id: int, limit: int = 10, db=Depends(get_db)):
     """
     Вернет все фильмы в наличии в магазине по айди магазина
+    формат ответа отличается от обычного формата фильмов,т.к. придется джойнить ещё  2 таблицы чтобы получить категорию,
+    кажется что наличие фильма в магазине можно узнать и не уточняя категорию
 
     :param store_id: айди магазина
     :param limit: Количество строк,которые необходимо вернуть, по умолчанию 10.
     :param db:  Подключение к базе данных
-    :return: лист FIlmGet
+    :return: Лист объектов с  айди фильма, названием фильма и ценой аренды
     """
 
-    response = db.query(Film.film_id, Film.title, Film.release_year, Film.length, Film.rating, Film.description,
-                        Film.special_features,
-                        Film.rental_rate, Film.rental_duration).join(Inventory).filter(
+    response = db.query(Film.film_id, Film.title, Film.length,
+                        Film.rental_rate).join(Inventory).filter(
         Inventory.store_id == store_id).limit(limit).all()
     return response
 
 
-@app.get("/film/check-in-store", response_model=List[FilmInStoreGet])
-def check_film_in_store(film_id: Annotated[int, Query()], store_id: Annotated[int, Query()], db=Depends(get_db)):
+@app.get("/film/check-in-store", response_model=List[FilmCheckInStoreGet])
+def check_film_in_store(film_id: int, store_id: int, db=Depends(get_db)):
     """
     Возвращает айди товара(ов) на складе если они в наличии в магазине
     :param film_id: айди фильма

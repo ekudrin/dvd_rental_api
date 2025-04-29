@@ -1,24 +1,30 @@
-import datetime
 from typing import List
+
 from pydantic import BaseModel
 
 
 class FilmGet(BaseModel):
     film_id: int
     title: str
-    description: str
+    name: str | None
     release_year: int
-    rental_duration: int
-    rental_rate: float
     length: int
     rating: str
+    description: str
     special_features: List
+    rental_rate: float
+    rental_duration: int
 
     class Config:
         orm_mode = True
 
 
 class FilmInStoreGet(BaseModel):
+    title: str
+    rental_rate: float
+
+
+class FilmCheckInStoreGet(BaseModel):
     inventory_id: int
 
     class Config:
