@@ -1,17 +1,21 @@
+from datetime import datetime, timedelta
 from typing import List
 
 import uvicorn
-from sqlalchemy import and_
+from sqlalchemy import insert
+
 from db.database import SessionLocal
 from fastapi import FastAPI, Depends, Query, HTTPException
 from typing import Annotated
 from db.table_film import Film
 from enums import FilmCategoryEnum
-from schema import FilmGet, FilmInStoreGet, CustomerGet, FakeAuthReq, FakeAuthResp
+from schema import FilmGet, FilmInStoreGet, CustomerGet, FakeAuthReq, FakeAuthResp, RentReq, RentResp, PaymentReq
 from table_category import Category
 from table_customer import Customer
 from table_film_category import FilmCategory
 from table_inventory import Inventory
+from table_payment import Payment
+from table_rental import Rental
 from table_staff import Staff
 
 app = FastAPI()
@@ -137,6 +141,44 @@ def fake_auth(user: FakeAuthReq, db=Depends(get_db)):
     if response is None:
         raise HTTPException(status_code=403, detail="Incorrect username or password")
     return response
+
+
+@app.post("/rent", response_model=RentResp)
+def post_rental(rent_info: RentReq, db=Depends(get_db)):
+    """
+    эндпоинт для аренды dvd,
+     в запросе передается информация необходимая для аренды(клиент, что берет, кто проводит операцию),
+      в ответе  айди аренды
+
+    :param rent_info: класс с полями айди товара, айди клиента, время аренды, айди сотрудника
+    :param db:подключение  к бд
+    :return:  айди созданной аренды
+    """
+    rental_date = datetime.now()
+    return_date = rental_date + timedelta(days=rent_info.return_duration)
+    new_rent = Rental(rental_date=rental_date, inventory_id=rent_info.inventory_id, customer_id=rent_info.customer_id,
+                      return_date=return_date, staff_id=rent_info.staff_id, last_update=rental_date)
+    db.add(new_rent)
+    db.commit()
+    db.refresh(new_rent)
+    return {"rental_id": new_rent.rental_id}
+
+
+@app.post("/payment")
+def post_payment(payment_info: PaymentReq, db=Depends(get_db)):
+    """
+    создает запись о проведенной оплате,
+    для упрощения процесса передается  сумма как факт оплаты,
+     без расчета стоимости и учета  было ли этого достаточно
+    :return:
+    """
+    payment_date = datetime.now()
+    new_payment = Payment(customer_id=payment_info.customer_id, staff_id=payment_info.staff_id,
+                          rental_id=payment_info.rental_id, amount=payment_info.amount, payment_date=payment_date)
+    db.add(new_payment)
+    db.commit()
+    db.refresh(new_payment)
+    return {"payment_id": new_payment.payment_id}
 
 
 if __name__ == "__main__":

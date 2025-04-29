@@ -46,3 +46,30 @@ class FakeAuthResp(BaseModel):
     last_name: str
     email: str
     store_id: int
+
+
+class RentReq(BaseModel):
+    inventory_id: int
+    customer_id: int
+    return_duration: int
+    staff_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class RentResp(BaseModel):
+    rental_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class PaymentReq(BaseModel):
+    customer_id: int
+    staff_id: int
+    rental_id: int
+    amount: float
+
+    class Config:
+        orm_mode = True
