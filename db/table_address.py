@@ -16,3 +16,4 @@ class Store(Base):
     last_update = Column(TIMESTAMP)
     city = relationship("City")
     customer = relationship("Customer")
+    staff = relationship("Staff")

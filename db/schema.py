@@ -30,3 +30,19 @@ class CustomerGet(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class FakeAuthReq(BaseModel):
+    username: str
+    password: str
+
+    class Config:
+        orm_mode = True
+
+
+class FakeAuthResp(BaseModel):
+    staff_id: int
+    first_name: str
+    last_name: str
+    email: str
+    store_id: int

@@ -14,3 +14,4 @@ class Store(Base):
     address = relationship("Address")
     inventory = relationship("Inventory")  # если добавить связь в инвентори падает при определении связей
     customer = relationship("Customer")
+    staff = relationship("Staff")

@@ -7,11 +7,12 @@ from fastapi import FastAPI, Depends, Query, HTTPException
 from typing import Annotated
 from db.table_film import Film
 from enums import FilmCategoryEnum
-from schema import FilmGet, FilmInStoreGet, CustomerGet
+from schema import FilmGet, FilmInStoreGet, CustomerGet, FakeAuthReq, FakeAuthResp
 from table_category import Category
 from table_customer import Customer
 from table_film_category import FilmCategory
 from table_inventory import Inventory
+from table_staff import Staff
 
 app = FastAPI()
 
@@ -122,5 +123,21 @@ def get_customer_id(first_name: Annotated[str, Query()], last_name: Annotated[st
     return response
 
 
+@app.post("/fake-auth/", response_model=FakeAuthResp)
+def fake_auth(user: FakeAuthReq, db=Depends(get_db)):
+    """
+    временное( ;) ) решение по авторизации пользователя, для получения информации по айди магазина и айди сотрудника
+
+    :param user: тело запроса, должно содержать поля username  и password
+    :param db: подключение к бд
+    :return: айди пользователя и айди магазина
+    """
+    response = db.query(Staff.staff_id, Staff.first_name, Staff.last_name, Staff.email, Staff.store_id).filter(
+        (Staff.username == user.username) & (Staff.password == user.password)).first()
+    if response is None:
+        raise HTTPException(status_code=403, detail="Incorrect username or password")
+    return response
+
+
 if __name__ == "__main__":
-    uvicorn.run(app)
+    uvicorn.run("app:app", host="127.0.0.1", port=5000, log_level="info", reload=True)
